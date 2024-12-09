@@ -143,6 +143,8 @@ blueprint:
       selector:
             select:
               options:
+              - label: "pushover"
+                value: "pushover"
               - label: "bike"
                 value: "bike"
               - label: "bugle"
