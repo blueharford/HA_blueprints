@@ -197,10 +197,10 @@ blueprint:
       name: Client ID (Optional-Advanced)
       description: Used to support multiple instances of Frigate. Leave blank if you don't know what to do.
       default: ""
-    notification_customisations:
+    notification_customization:
       name: |
-        # Notification Customisations
-      description: These are Notification Customisation Options
+        # Notification Customizations
+      description: These are Notification Customization Options
       icon: mdi:bell
       collapsed: true
       input:
