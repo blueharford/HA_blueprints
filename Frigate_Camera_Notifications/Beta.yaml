@@ -135,8 +135,7 @@ blueprint:
         The name of the configuration in the integration for pushover
       selector:
         action:
-          filter:
-            domain: notify
+          - domain: notify
     pushover_sound:
       name: Sound for pushover notification
       description: |
