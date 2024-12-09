@@ -933,6 +933,7 @@ variables:
   notify_group: !input notify_group
   notify_group_target: "{{ notify_group | lower | regex_replace('^notify\\.', '') | replace(' ','_') }}"
   pushover_id: !input pushover_id
+  pushover_id_target: "{{ pushover_id | lower | regex_replace('^notify\\.', '') | replace(' ','_') }}"
   pushover_sound: !input pushover_sound
   pushover: "{{true if (pushover_id | length > 0) else ''}}"
   telegram_chat_id: !input notify_telegram_chat_id
@@ -1116,6 +1117,7 @@ actions:
                             pushover: {{pushover}},
                             pushover_id: {{pushover_id}},
                             pushover_sound: {{pushover_sound}},
+                            pushover_id_target: {{'pushover (input/formatted): ' + pushover_id + '/' + pushover_id_target + ', ' if pushover_id else 'Mobile Device'}},
                           Filters: 
                             Zones: 
                               Zone Filter toggle on: {{zone_only}}, 
@@ -1173,7 +1175,7 @@ actions:
                               url: "{{telegram_base_url}}/api/frigate{{client_id}}/notifications/{{id}}/{{attachment}}"
                       - conditions: "{{ pushover }}"
                         sequence:
-                          - action: notify.{{pushover_id}}
+                          - action: notify.{{ pushover_id_target }}
                             data:
                               title: "{{title}}"
                               message: >- 
