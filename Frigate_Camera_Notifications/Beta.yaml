@@ -130,12 +130,10 @@ blueprint:
         Examples: http://192.168.1.25:8123
       default: ""
     pushover_id:
-      name: Pushover entity name
+      name: Pushover notifier name
       description: |
         The name of the configuration in the integration for pushover
-      selector:
-        action:
-          - domain: notify
+      default: "pushover"
     pushover_sound:
       name: Sound for pushover notification
       description: |
