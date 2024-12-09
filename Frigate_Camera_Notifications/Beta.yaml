@@ -137,24 +137,6 @@ blueprint:
         action:
           filter:
             domain: notify
-    pushover_priority:
-      name: Pushover notification priority
-      description: |
-        The priority the message gets within the pushover app
-      default: 0
-      selector:
-            select:
-              options:
-              - label: "Lowest Priority"
-                value: -2
-              - label: "Low Priority"
-                value: -1
-              - label: "Normal Priority"
-                value: 0
-              - label: "High Priority"
-                value: 1
-              - label: "Emergency Priority"
-                value: 2
     pushover_sound:
       name: Sound for pushover notification
       description: |
@@ -952,7 +934,6 @@ variables:
   notify_group_target: "{{ notify_group | lower | regex_replace('^notify\\.', '') | replace(' ','_') }}"
   pushover_id: !input pushover_id
   pushover_sound: !input pushover_sound
-  pushover_priority: !input pushover_priority
   pushover: "{{true if (pushover_id | length > 0) else ''}}"
   telegram_chat_id: !input notify_telegram_chat_id
   telegram: "{{true if (telegram_chat_id | length > 0) else ''}}"
@@ -1134,7 +1115,6 @@ actions:
                             telegram_chat_id: {{telegram_chat_id}},
                             pushover: {{pushover}},
                             pushover_id: {{pushover_id}},
-                            pushover_priority: {{pushover_priority}},
                             pushover_sound: {{pushover_sound}},
                           Filters: 
                             Zones: 
@@ -1201,7 +1181,7 @@ actions:
                               data:
                                 url: "{{tap_action}}"
                                 sound: "{{ iif(sound == 'none', null, pushover_sound) }}"
-                                priority: "{{pushover_priority}}"
+                                priority: high
                                 attachment:
                                   url: "{{base_url}}/api/frigate{{client_id}}/notifications/{{id}}/{{attachment}}"
                                   content-type: jpeg
