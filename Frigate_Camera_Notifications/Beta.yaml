@@ -1,5 +1,5 @@
 blueprint:
-  name: Frigate Notifications (0.12.0.5c)
+  name: Frigate Notifications (0.12.0.5d)
   author: SgtBatten
   homeassistant:
     min_version: 2024.6.0
@@ -66,6 +66,7 @@ blueprint:
       - Customise group on mobile devices.
       - Bounding box and crop options for attachment.
       - Set notification volume on iOS
+      - Send notifications to Pushover app
 
     [1]: https://companion.home-assistant.io/docs/notifications/notifications-basic#sending-notifications-to-multiple-devices
     [2]: https://blakeblackshear.github.io/frigate/configuration/cameras#zones
@@ -129,6 +130,84 @@ blueprint:
         Must include the scheme i.e http:// or https://
         Examples: http://192.168.1.25:8123
       default: ""
+    pushover_id:
+      name: Pushover entity name
+      description: |
+        The name of the configuration in the integration for pushover
+      selector:
+        action:
+          filter:
+            domain: notify
+    pushover_priority:
+      name: Pushover notification priority
+      description: |
+        The priority the message gets within the pushover app
+      default: 0
+      selector:
+            select:
+              options:
+              - label: "Lowest Priority"
+                value: -2
+              - label: "Low Priority"
+                value: -1
+              - label: "Normal Priority"
+                value: 0
+              - label: "High Priority"
+                value: 1
+              - label: "Emergency Priority"
+                value: 2
+    pushover_sound:
+      name: Sound for pushover notification
+      description: |
+        The name of the sound pushover will use upon notification
+      default: "pushover"
+      selector:
+            select:
+              options:
+              - label: "bike"
+                value: "bike"
+              - label: "bugle"
+                value: "bugle"
+              - label: "cashregister"
+                value: "cashregister"
+              - label: "classical"
+                value: "classical"
+              - label: "cosmic"
+                value: "cosmic"
+              - label: "falling"
+                value: "falling"
+              - label: "gamelan"
+                value: "gamelan"
+              - label: "incoming"
+                value: "incoming"
+              - label: "intermission"
+                value: "intermission"
+              - label: "magic"
+                value: "magic"
+              - label: "mechanical"
+                value: "mechanical"
+              - label: "pianobar"
+                value: "pianobar"
+              - label: "siren"
+                value: "siren"
+              - label: "spacealarm"
+                value: "spacealarm"
+              - label: "tugboat"
+                value: "tugboat"
+              - label: "alien"
+                value: "alien"
+              - label: "climb"
+                value: "climb"
+              - label: "persistent"
+                value: "persistant"
+              - label: "echo"
+                value: "echo"
+              - label: "updown"
+                value: "updown"
+              - label: "vibrate"
+                value: "vibrate"
+              - label: "none"
+                value: "none"
     mqtt_topic:
       name: MQTT Topic (Advanced)
       description: The MQTT topic Frigate sends messages in.
@@ -872,6 +951,10 @@ variables:
   android_auto: !input android_auto
   notify_group: !input notify_group
   notify_group_target: "{{ notify_group | lower | regex_replace('^notify\\.', '') | replace(' ','_') }}"
+  pushover_id: !input pushover_id
+  pushover_sound: !input pushover_sound
+  pushover_priority: !input pushover_priority
+  pushover: "{{true if (pushover_id | length > 0) else ''}}"
   telegram_chat_id: !input notify_telegram_chat_id
   telegram: "{{true if (telegram_chat_id | length > 0) else ''}}"
   zone_only: !input zone_filter
@@ -1050,6 +1133,10 @@ actions:
                             tv_interrupt: {{tv_interrupt}}, 
                             telegram: {{telegram}},
                             telegram_chat_id: {{telegram_chat_id}},
+                            pushover: {{pushover}},
+                            pushover_id: {{pushover_id}},
+                            pushover_priority: {{pushover_priority}},
+                            pushover_sound: {{pushover_sound}},
                           Filters: 
                             Zones: 
                               Zone Filter toggle on: {{zone_only}}, 
@@ -1105,6 +1192,20 @@ actions:
                               target: "{{telegram_chat_id}}"
                               caption: "{{message}}"
                               url: "{{telegram_base_url}}/api/frigate{{client_id}}/notifications/{{id}}/{{attachment}}"
+                      - conditions: "{{ pushover }}"
+                        sequence:
+                          - action: notify.{{pushover_id}}
+                            data:
+                              title: "{{title}}"
+                              message: >- 
+                                "{{message}}"
+                              data:
+                                url: "{{tap_action}}"
+                                sound: "{{ iif(sound == 'none', null, pushover_sound) }}"
+                                priority: {{pushover_priority}}
+                                attachment:
+                                  url: "{{base_url}}/api/frigate{{client_id}}/notifications/{{id}}/{{attachment}}"
+                                  content-type: jpeg
                       - conditions: "{{ not notify_group_target }}"
                         sequence:
                           - device_id: !input notify_device
@@ -1476,6 +1577,23 @@ actions:
                                         inline_keyboard:
                                           - [["{{button_1}}", "{{url_1}}"], ["{{button_2}}", "{{url_2}}"]]
                                           - [["{{button_3}}", "{{url_3}}"]]
+                            - conditions: "{{ pushover }}"
+                              sequence:
+                                - choose:
+                                  - conditions:
+                                    - "{{ event['type'] == 'end' }}"
+                                    - "{{ video | length > 0 }}"
+                                    sequence:
+                                      - action: notify.{{pushover_id}}
+                                        data:
+                                          title: "Update of Image"
+                                          message: "{{message}}"
+                                          url: "{{video}}"
+                                  default:
+                                    - action: notify.{{pushover_id}}
+                                      data:
+                                        message: "{{message}}"
+                                        url: "{{base_url}}/api/frigate{{client_id}}/notifications/{{id}}/{{attachment}}"
                             - conditions: "{{ not notify_group_target }}"
                               sequence:
                                 - device_id: !input notify_device
